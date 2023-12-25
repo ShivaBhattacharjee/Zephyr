@@ -1,6 +1,6 @@
 import React from "react";
 import Navbar from "../components/Navbar";
-import { Merge, Plus } from "lucide-react";
+import { HardDriveDownload, HardDriveUpload, Merge, Plus } from "lucide-react";
 import roomfloating from "../assets/roomfloating.svg";
 
 const Room = () => {
@@ -9,13 +9,13 @@ const Room = () => {
       <Navbar />
       <div className="flex flex-col gap-4 justify-center items-center min-h-[80vh]">
         <img src={roomfloating} alt="roomfloating" className="" />
-        <button className="flex bg-white gap-3 text-black p-4 font-semibold text-2xl text-center items-center justify-center rounded-full w-full">
-          <Merge />
-          Join Room
+        <button className="flex duration-200 hover:bg-transparent hover:border hover:border-white hover:text-white bg-white gap-3 text-black p-4 font-semibold text-2xl text-center items-center justify-center rounded-full w-full">
+          <HardDriveUpload />
+          Send Files
         </button>
-        <button className="flex bg-white gap-3 text-black p-4 font-semibold text-2xl text-center items-center justify-center rounded-full w-full">
-          <Plus />
-          Create Room
+        <button className="flex hover:bg-transparent hover:text-white hover:border hover:border-white duration-200 bg-white gap-3 text-black p-4 font-semibold text-2xl text-center items-center justify-center rounded-full w-full">
+          <HardDriveDownload />
+          Receive Files
         </button>
       </div>
 

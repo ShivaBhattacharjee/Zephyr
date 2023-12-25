@@ -24,13 +24,10 @@ const Home = () => {
     if (nicknameInput.length < 3)
       return Toast.ErrorShowToast("Nickname must be atleast 3 characters long");
     setNickname(nicknameInput);
-    navigate("/room");
+    navigate("/home");
   };
   return (
     <div className=" w-full lg:w-1/2 lg:m-auto p-4 flex flex-col gap-5 justify-center items-center min-h-screen">
-      <h1 className=" uppercase p-8 text-3xl font-bold text-center absolute top-0 right-0 lg:left-0 lg:top-20">
-        Zephyr
-      </h1>
       <img
         src={ShareBg}
         alt="file-sharing-background"
@@ -54,6 +51,15 @@ const Home = () => {
           Continue <ArrowRight />
         </button>
       </form>
+
+      <div className="flex absolute bottom-10 flex-col gap-2 justify-center items-center">
+        <h1 className=" text-3xl opacity-50 tracking-widest uppercase font-bold">
+          Zephyr
+        </h1>
+        <p className=" opacity-50 font-bold tracking-widest text-sm">
+          Unleash the Breeze of Peer-to-Peer Sharing
+        </p>
+      </div>
     </div>
   );
 };
