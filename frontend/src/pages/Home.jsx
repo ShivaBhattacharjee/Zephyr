@@ -13,7 +13,7 @@ const Home = () => {
   useEffect(() => {
     const storedNickname = localStorage.getItem("nickname");
     if (storedNickname) {
-      navigate("/room");
+      navigate("/home");
     } else {
       navigate("/");
     }
@@ -27,7 +27,7 @@ const Home = () => {
     navigate("/home");
   };
   return (
-    <div className=" w-full lg:w-1/2 lg:m-auto p-4 flex flex-col gap-5 justify-center items-center min-h-screen">
+    <div className="lg:w-1/4 m-auto p-4 flex flex-col gap-5 justify-center items-center min-h-screen">
       <img
         src={ShareBg}
         alt="file-sharing-background"
@@ -56,7 +56,7 @@ const Home = () => {
         <h1 className=" text-3xl opacity-50 tracking-widest uppercase font-bold">
           Zephyr
         </h1>
-        <p className=" opacity-50 font-bold tracking-widest text-sm">
+        <p className=" opacity-50 font-bold tracking-wide text-sm">
           Unleash the Breeze of Peer-to-Peer Sharing
         </p>
       </div>

@@ -14,10 +14,10 @@ const Navbar = () => {
 
   const [openEditProfileModal, setOpenEditProfileModal] = useState(false);
   return (
-    <nav className="flex lg:w-1/4 m-auto flex-col">
+    <nav className="flex flex-col lg:w-1/2 lg:m-auto">
       <div className="flex flex-wrap justify-between items-center">
         <div>
-          <h1 className=" font-bold text-2xl tracking-normal">
+          <h1 className=" font-bold text-2xl tracking-normal truncate w-52">
             Yahallo , {nickname}
           </h1>
           <span className=" text-sm font-bold mt-2 bg-white/30 w-20 justify-center tracking-wider flex p-1 rounded-full">
@@ -41,11 +41,11 @@ const Navbar = () => {
       </div>
 
       <div
-        className={`fixed z-50 bg-white/5 backdrop-blur-lg h-full duration-300 w-full right-0 ease-in-out ${
+        className={`fixed z-50 bg-white/5 backdrop-blur-md h-full duration-300 w-full right-0 ease-in-out ${
           openEditProfileModal ? "-bottom-0" : "-bottom-[4600px]"
         }`}
       >
-        <h1 className=" float-right p-5">
+        <h1 className=" float-right cursor-pointer lg:absolute lg:right-96 p-5">
           <Settings
             onClick={() => setOpenEditProfileModal(!openEditProfileModal)}
             size={30}

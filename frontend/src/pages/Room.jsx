@@ -8,15 +8,17 @@ const Room = () => {
     <div className=" p-4">
       <Navbar />
       <div className="flex flex-col gap-4 justify-center items-center min-h-[80vh]">
-        <img src={roomfloating} alt="roomfloating" className="" />
-        <button className="flex duration-200 hover:bg-transparent hover:border hover:border-white hover:text-white bg-white gap-3 text-black p-4 font-semibold text-2xl text-center items-center justify-center rounded-full w-full">
-          <HardDriveUpload />
-          Send Files
-        </button>
-        <button className="flex hover:bg-transparent hover:text-white hover:border hover:border-white duration-200 bg-white gap-3 text-black p-4 font-semibold text-2xl text-center items-center justify-center rounded-full w-full">
-          <HardDriveDownload />
-          Receive Files
-        </button>
+        <img src={roomfloating} alt="roomfloating" className=" lg:w-[500px]" />
+        <div className="grid w-full lg:w-1/3 md:grid-cols-2 grid-cols-1 gap-8 mt-5">
+          <button className="flex duration-200 hover:bg-transparent hover:border hover:border-white hover:text-white bg-white gap-3 text-black p-4 font-semibold text-2xl text-center items-center justify-center rounded-full w-full">
+            <HardDriveUpload />
+            Send Files
+          </button>
+          <button className="flex hover:bg-transparent hover:text-white hover:border hover:border-white duration-200 bg-white gap-3 text-black p-4 font-semibold text-2xl text-center items-center justify-center rounded-full w-full">
+            <HardDriveDownload />
+            Receive Files
+          </button>
+        </div>
       </div>
 
       <div className="flex flex-col gap-2 justify-center items-center">
