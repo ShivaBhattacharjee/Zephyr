@@ -37,7 +37,7 @@ export default function EditProfileModal({ setOpenEditProfileModal }) {
   };
 
   return (
-    <div className=" bg-black lg:w-1/3 m-auto lg:right-0 lg:left-0 border-t-2 absolute bottom-0 border-white/30  rounded-t-2xl p-4 h-[45%] shadow-lg shadow-white w-full">
+    <div className=" bg-black lg:w-1/3 z-10 m-auto lg:right-0 lg:left-0 border-t-2 fixed bottom-0 border-white/30  rounded-t-2xl p-4 h-[45%] shadow-lg shadow-white w-full">
       <div className="flex min-h-full justify-center flex-col gap-6">
         <form className="flex gap-5 flex-col">
           <label

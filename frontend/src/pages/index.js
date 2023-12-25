@@ -1,3 +1,4 @@
 import Home from "./Home";
 import Room from "./Room";
-export { Home, Room };
+import SendFile from "./SendFile";
+export { Home, Room, SendFile };
