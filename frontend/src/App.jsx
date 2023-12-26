@@ -4,7 +4,7 @@ import { Home, Room, SendFile } from "./pages";
 import { Toaster } from "react-hot-toast";
 const App = () => {
   return (
-    <section className=" bg-black min-h-screen w-full text-white">
+    <section className=" bg-black overflow-hidden min-h-screen w-full text-white">
       <BrowserRouter>
         <Toaster />
         <Routes>

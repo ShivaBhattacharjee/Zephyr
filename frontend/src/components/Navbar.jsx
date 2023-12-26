@@ -14,7 +14,7 @@ const Navbar = () => {
 
   const [openEditProfileModal, setOpenEditProfileModal] = useState(false);
   return (
-    <nav className="flex flex-col lg:w-1/2 lg:m-auto stick">
+    <nav className="flex flex-col lg:w-1/2 lg:m-auto">
       <div className="flex flex-wrap justify-between items-center">
         <div>
           <h1 className=" font-bold text-2xl tracking-normal truncate w-52">

@@ -1,6 +1,6 @@
 import React from "react";
 import Navbar from "../components/Navbar";
-import { HardDriveDownload, HardDriveUpload, Merge, Plus } from "lucide-react";
+import { ArrowDownUp } from "lucide-react";
 import roomfloating from "../assets/roomfloating.svg";
 import { Link } from "react-router-dom";
 
@@ -10,22 +10,16 @@ const Room = () => {
       <Navbar />
       <div className="flex flex-col gap-4 justify-center items-center min-h-[80vh]">
         <img src={roomfloating} alt="roomfloating" className=" lg:w-[500px]" />
-        <div className="grid w-full lg:w-1/3 md:grid-cols-2 grid-cols-1 gap-8 mt-5">
-          <Link
-            to={"/home/send-file"}
-            className="flex duration-200 hover:bg-transparent hover:border hover:border-white hover:text-white bg-white gap-3 text-black p-4 font-semibold text-2xl text-center items-center justify-center rounded-full w-full"
-          >
-            <HardDriveUpload />
-            Send Files
-          </Link>
-          <button className="flex bg-transparent text-white border border-white duration-200  gap-3  p-4 font-semibold text-2xl text-center items-center justify-center rounded-full w-full">
-            <HardDriveDownload />
-            Receive Files
-          </button>
-        </div>
+        <Link
+          to={"/home/send-file"}
+          className="flex lg:w-1/3  duration-200 hover:bg-transparent hover:border hover:border-white hover:text-white bg-white gap-3 text-black p-4 font-semibold text-2xl text-center items-center justify-center rounded-lg w-full"
+        >
+          <ArrowDownUp />
+          Local Network
+        </Link>
       </div>
 
-      <div className="flex opacity-0 flex-col gap-2 justify-center items-center">
+      <div className="flex flex-col gap-2 justify-center items-center">
         <h1 className=" text-3xl opacity-50 tracking-widest uppercase font-bold">
           Zephyr
         </h1>

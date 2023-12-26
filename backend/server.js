@@ -1,26 +1,19 @@
 import express from "express";
 import dotenv from "dotenv";
 import cors from "cors";
-import { Server } from "socket.io"; 
+import { Server } from "socket.io";
 
 dotenv.config();
-
-const whitelist = process.env.WHITELISTED_SITES
-  ? process.env.WHITELISTED_SITES.split(",")
-  : "*";
-
 const app = express();
+app.use(express.json());
 
 app.use(
   cors({
-    origin: whitelist,
+    origin: "*",
+    methods: "GET,PUT,POST,DELETE",
+    allowedHeaders: "Content-Type",
   })
 );
-
-// store the list of users
-const users = {};
-// store users in socket rooms 
-const socketToRoom = {};
 
 const httpServer = app.listen(process.env.PORT || 8080, () =>
   console.log(
@@ -32,13 +25,30 @@ const httpServer = app.listen(process.env.PORT || 8080, () =>
   )
 );
 
-app.get("/", (req, res) => {
-    res.send("Server is running");
-})
-
-const io = new Server(httpServer);
-
-io.on("connection", (socket) => {
-    console.log("New client connected in sockets");
+const io = new Server(httpServer, {
+  cors: {
+    origin: "http://localhost:5173",
+    methods: ["GET", "POST"],
+  },
 });
 
+const users = {};
+
+io.on("connection", (socket) => {
+  console.log("New client connected in sockets");
+
+  socket.on("setNickname", (nickname) => {
+    users[socket.id] = nickname;
+    io.emit("updateUsers", Object.values(users));
+  });
+
+  // Listen for the disconnect event
+  socket.on("disconnect", () => {
+    delete users[socket.id];
+    io.emit("updateUsers", Object.values(users));
+  });
+});
+
+app.get("/", (req, res) => {
+  res.send("Server is running");
+});
