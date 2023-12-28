@@ -4,14 +4,14 @@ const Toast = {
   SuccessshowToast: (message) => {
     toast.success(message, {
       style: {
-        border: "1px solid #28a745",
+        border: "1px solid #ffff",
         padding: "16px",
         color: "#fff",
         backgroundColor: "#000",
       },
       iconTheme: {
         primary: "#000",
-        secondary: "#28a745",
+        secondary: "#ffff",
       },
     });
   },

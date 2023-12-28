@@ -14,9 +14,14 @@ const SendFile = () => {
   const [error, setError] = useState(null);
   const [selectedFileName, setSelectedFileName] = useState("");
   const [uploadProgress, setUploadProgress] = useState(0);
+  const [senderNickname, setSenderNickname] = useState("");
+
+  let socket;
+
   useEffect(() => {
-    const socket = io("http://localhost:8080");
+    socket = io("http://localhost:8080");
     socket.emit("setNickname", nickname);
+
     socket.on("updateUsers", (users) => {
       setConnectedDevices(users);
       setLoading(false);
@@ -38,32 +43,56 @@ const SendFile = () => {
   }, [nickname, loading]);
 
   const handleFileUpload = async (event) => {
-    console.log("function invoked");
     const file = event.target.files[0];
+    socket = io("http://localhost:8080");
     setSelectedFileName(event.target.files[0].name);
-    const formData = new FormData();
-    formData.append("file", file);
 
-    // Assuming connectedDevices.length > 1 and choosing the first device
-    const recipientSocketId = connectedDevices[1];
-    const socket = io("http://localhost:8080");
-    console.log("socket", socket);
-    // Send the file to the server with recipientSocketId as a custom header
-    try {
-      const response = await fetch("http://localhost:8080/upload", {
-        method: "POST",
-        body: formData,
-        headers: {
-          "Recipient-Socket-Id": recipientSocketId,
-          "x-socket-id": socket.id,
-        },
-      });
-      console.log(response);
-      // Rest of the code remains unchanged
-    } catch (error) {
-      console.error("Error during file upload:", error.message);
-      setError(error.message);
-    }
+    // Assuming connectedDevices.length > 0
+    const currentSocketNickname = nickname;
+    const recipientSocketIds = connectedDevices
+      .map((device) => device.trim())
+      .filter((device) => device !== currentSocketNickname);
+    console.log(recipientSocketIds);
+
+    recipientSocketIds.forEach(async (recipientSocketId) => {
+      const formData = new FormData();
+      formData.append("file", file);
+
+      try {
+        const response = await fetch("http://localhost:8080/upload", {
+          method: "POST",
+          body: formData,
+          headers: {
+            "Recipient-Socket-Id": recipientSocketId,
+            "x-socket-id": socket.id,
+          },
+        });
+
+        // Track progress using the onprogress event
+        const total = parseInt(response.headers.get("content-length"), 10);
+        let loaded = 0;
+
+        const reader = response.body.getReader();
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          loaded += value.length;
+          const progress = (loaded / total) * 100;
+          setUploadProgress(progress);
+        }
+
+        // Set sender nickname
+        setSenderNickname(currentSocketNickname);
+
+        // Reset progress after completion
+        setUploadProgress(0);
+
+        // Rest of the code remains unchanged
+      } catch (error) {
+        console.error("Error during file upload:", error.message);
+        setError(error.message);
+      }
+    });
   };
 
   return (
@@ -151,10 +180,11 @@ const SendFile = () => {
             </button>
 
             <div className="border-2 min-h-full flex flex-col justify-center items-center overflow-y-scroll font-semibold mt-6 border-dashed w-full lg:w-[50%] lg:m-auto h-32 border-white/40 mb-10 lg:mb-20">
-              {uploadProgress > 0 && (
+              {uploadProgress < 0 && (
                 <span>{`${uploadProgress}% Uploaded`}</span>
               )}
               <span>{selectedFileName || "Choose File"}</span>
+              {selectedFileName && <span>Sent by {senderNickname}</span>}
             </div>
             <div className="flex flex-col gap-2 justify-center items-center">
               <h1 className="text-3xl opacity-50 tracking-widest uppercase font-bold">
