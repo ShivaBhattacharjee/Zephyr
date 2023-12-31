@@ -18,11 +18,12 @@ app.use(
   })
 );
 
-// Setup Multer for file uploads
+// Multer for file uploads
 const storage = multer.memoryStorage();
 const upload = multer({
   storage: storage,
-  limits: { fileSize: 1024 * 1024 * 5 }, // 5MB limit, adjust as needed
+  // limit cause i dont want to bazuka my server with 1GB files yeah i am broke
+  limits: { fileSize: 1024 * 1024 * 150 }, // 150 MB limit, adjust as needed
 });
 
 const httpServer = createServer(app);
@@ -37,51 +38,34 @@ const io = new Server(httpServer, {
 const users = {};
 
 io.on("connection", (socket) => {
-  console.log("New client connected in sockets");
-
   socket.on("setNickname", (nickname) => {
     users[socket.id] = nickname;
     io.emit("updateUsers", Object.values(users));
   });
 
-  // Listen for the disconnect event
   socket.on("disconnect", () => {
     delete users[socket.id];
-    io.emit("updateUsers", Object.values(users));
+    io.emit("updateUsers", Object.keys(users));
   });
 
-  // Handle file upload
   socket.on("uploadFile", (fileData, recipientSocketId) => {
     const recipientSocket = io.sockets.sockets.get(recipientSocketId);
 
     if (recipientSocket) {
-      recipientSocket.emit("receiveFile", { sender: socket.id, fileData });
+      recipientSocket.emit("receiveFile", {
+        sender: { id: socket.id, nickname: users[socket.id] },
+        fileData,
+      });
     }
   });
 });
 
 app.post("/upload", upload.single("file"), (req, res) => {
   try {
-    if (!req.file) {
-      throw new Error("No File Found");
-    }
-    console.log("File received:", req.file.originalname);
-    const fileData = req.file.buffer.toString("base64");
     const recipientSocketId = req.headers["recipient-socket-id"];
-    console.log("Recipient socket ID:", recipientSocketId);
-    const recipientSocket = io.sockets.sockets.get(recipientSocketId);
-
-    if (recipientSocket) {
-      recipientSocket.emit("receiveFile", {
-        sender: req.headers["x-socket-id"],
-        fileData,
-      });
-      console.log("File uploaded successfully to", recipientSocketId);
-    } else {
-      console.error("Recipient socket not found:", recipientSocketId);
-    }
-
-    res.send("File uploaded successfully");
+    // const recipientSocket = io.sockets.connected[recipientSocketId];
+    // console.log("Recipient socket:", recipientSocket);
+    // console.log("Recipient socket ID:", recipientSocketId);
   } catch (error) {
     console.error("Error handling file upload:", error.message);
     res.status(500).send("Internal Server Error");
