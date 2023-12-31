@@ -20,7 +20,9 @@ const SendFile = () => {
 
   useEffect(() => {
     socket = io("http://localhost:8080");
-    socket.emit("setNickname", nickname);
+    socket.on("connect", () => {
+      socket.emit("setNickname", nickname);
+    });
 
     socket.on("updateUsers", (users) => {
       setConnectedDevices(users);
@@ -47,12 +49,9 @@ const SendFile = () => {
     socket = io("http://localhost:8080");
     setSelectedFileName(event.target.files[0].name);
 
-    // Assuming connectedDevices.length > 0
-    const currentSocketNickname = nickname;
-    const recipientSocketIds = connectedDevices
-      .map((device) => device.trim())
-      .filter((device) => device !== currentSocketNickname);
-    console.log(recipientSocketIds);
+    const recipientSocketIds = connectedDevices.filter(
+      (device) => device !== nickname
+    );
 
     recipientSocketIds.forEach(async (recipientSocketId) => {
       const formData = new FormData();
@@ -68,6 +67,8 @@ const SendFile = () => {
           },
         });
 
+        setSenderNickname(socket.id || localStorage.getItem("nickname"));
+
         // Track progress using the onprogress event
         const total = parseInt(response.headers.get("content-length"), 10);
         let loaded = 0;
@@ -82,19 +83,15 @@ const SendFile = () => {
         }
 
         // Set sender nickname
-        setSenderNickname(currentSocketNickname);
 
         // Reset progress after completion
         setUploadProgress(0);
-
-        // Rest of the code remains unchanged
       } catch (error) {
         console.error("Error during file upload:", error.message);
         setError(error.message);
       }
     });
   };
-
   return (
     <div className="p-4 overflow-hidden lg:w-[90%] lg:m-auto">
       <Navbar />
@@ -152,7 +149,7 @@ const SendFile = () => {
                         className="flex justify-center items-center flex-col font-bold text-lg"
                       >
                         <div className="w-16 flex-col h-16 shadow-white/5 shadow-2xl flex justify-center items-center font-bold text-2xl bg-white text-black rounded-full">
-                          {device.toUpperCase().split("")[0]}
+                          {device?.toUpperCase()?.split("")[0]}
                         </div>
                         <h1 className="truncate max-w-28">{device}</h1>
                       </div>
