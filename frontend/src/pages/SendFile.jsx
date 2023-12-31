@@ -16,82 +16,72 @@ const SendFile = () => {
   const [uploadProgress, setUploadProgress] = useState(0);
   const [senderNickname, setSenderNickname] = useState("");
 
-  let socket;
+  // Declare socket state
+  const [socket, setSocket] = useState(null);
 
   useEffect(() => {
-    socket = io("http://localhost:8080");
-    socket.on("connect", () => {
-      socket.emit("setNickname", nickname);
+    // Initialize socket
+    const newSocket = io("http://localhost:8080");
+    setSocket(newSocket);
+
+    newSocket.on("connect", () => {
+      newSocket.emit("setNickname", nickname);
     });
 
-    socket.on("updateUsers", (users) => {
+    newSocket.on("updateUsers", (users) => {
       setConnectedDevices(users);
       setLoading(false);
       setError(null);
     });
 
-    socket.on("nicknameError", (errorMessage) => {
+    newSocket.on("nicknameError", (errorMessage) => {
       setError(errorMessage);
     });
 
-    socket.on("connect_error", (error) => {
+    newSocket.on("connect_error", (error) => {
       console.error("Socket connection error:", error.message);
       setError("Unable to connect to the server.");
     });
 
     return () => {
-      socket.disconnect();
+      newSocket.disconnect();
     };
   }, [nickname, loading]);
 
   const handleFileUpload = async (event) => {
     const file = event.target.files[0];
-    socket = io("http://localhost:8080");
-    setSelectedFileName(event.target.files[0].name);
+    setSelectedFileName(file.name);
 
+    // Ensure recipientSocketIds is correctly obtained from connectedDevices
     const recipientSocketIds = connectedDevices.filter(
       (device) => device !== nickname
     );
 
-    recipientSocketIds.forEach(async (recipientSocketId) => {
-      const formData = new FormData();
-      formData.append("file", file);
+    try {
+      await Promise.all(
+        recipientSocketIds.map(async (recipientSocketId) => {
+          const formData = new FormData();
+          formData.append("file", file);
 
-      try {
-        const response = await fetch("http://localhost:8080/upload", {
-          method: "POST",
-          body: formData,
-          headers: {
-            "Recipient-Socket-Id": recipientSocketId,
-            "x-socket-id": socket.id,
-          },
-        });
+          await fetch("http://localhost:8080/upload", {
+            method: "POST",
+            body: formData,
+            headers: {
+              "Recipient-Socket-Id": recipientSocketId,
+              "x-socket-id": socket.id,
+            },
+          });
+        })
+      );
 
-        setSenderNickname(socket.id || localStorage.getItem("nickname"));
-
-        // Track progress using the onprogress event
-        const total = parseInt(response.headers.get("content-length"), 10);
-        let loaded = 0;
-
-        const reader = response.body.getReader();
-        while (true) {
-          const { done, value } = await reader.read();
-          if (done) break;
-          loaded += value.length;
-          const progress = (loaded / total) * 100;
-          setUploadProgress(progress);
-        }
-
-        // Set sender nickname
-
-        // Reset progress after completion
-        setUploadProgress(0);
-      } catch (error) {
-        console.error("Error during file upload:", error.message);
-        setError(error.message);
-      }
-    });
+      setSenderNickname(socket.id || localStorage.getItem("nickname"));
+      setUploadProgress(0);
+    } catch (error) {
+      console.error("Error during file upload:", error.message);
+      setError(error.message);
+    }
   };
+
   return (
     <div className="p-4 overflow-hidden lg:w-[90%] lg:m-auto">
       <Navbar />

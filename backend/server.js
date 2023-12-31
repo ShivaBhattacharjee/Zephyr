@@ -22,7 +22,6 @@ app.use(
 const storage = multer.memoryStorage();
 const upload = multer({
   storage: storage,
-  // limit cause i dont want to bazuka my server with 1GB files yeah i am broke
   limits: { fileSize: 1024 * 1024 * 150 }, // 150 MB limit
 });
 
@@ -48,21 +47,47 @@ io.on("connection", (socket) => {
     io.emit("updateUsers", Object.keys(users));
   });
 
-  socket.on("uploadFile", (fileData, recipientSocketId) => {
-    const recipientSocket = io.sockets.sockets.get(recipientSocketId);
+  socket.on("uploadFile", (fileData, recipientNickname) => {
+    const recipientSocketId = Object.keys(users).find(
+      (socketId) => users[socketId] === recipientNickname
+    );
 
-    if (recipientSocket) {
-      recipientSocket.emit("receiveFile", {
+    if (recipientSocketId) {
+      io.to(recipientSocketId).emit("receiveFile", {
         sender: { id: socket.id, nickname: users[socket.id] },
         fileData,
       });
+      console.log("File sent to", recipientNickname);
+    } else {
+      console.log("Recipient socket not found", recipientNickname);
     }
   });
 });
 
 app.post("/upload", upload.single("file"), (req, res) => {
   try {
-    console.log("Upload route is invoked");
+    console.log("Upload starting...");
+    const fileData = req.file.buffer.toString("base64");
+    const recipientNickname = req.headers["recipient-socket-id"];
+    const senderSocketId = req.headers["x-socket-id"];
+
+    const recipientSocketId = Object.keys(users).find(
+      (socketId) => users[socketId] === recipientNickname
+    );
+
+    console.log("Recipient socket id", recipientSocketId);
+    // if (recipientSocketId) {
+    //   io.to(recipientSocketId).emit("receiveFile", {
+    //     sender: { id: senderSocketId, nickname: users[senderSocketId] },
+    //     fileData,
+    //   });
+    //   res.status(200).send("File uploaded successfully");
+    // } else {
+    //   console.log("Recipient socket not found", recipientNickname);
+    //   res.status(404).send("Recipient socket not found");
+    // }
+
+    console.log("function completed");
   } catch (error) {
     console.error("Error handling file upload:", error.message);
     res.status(500).send("Internal Server Error");
