@@ -1,14 +1,11 @@
-import { createServer } from "http";
 import express from "express";
+import http from "http";
 import { Server } from "socket.io";
-import dotenv from "dotenv";
-import cors from "cors";
 import multer from "multer";
-import path from "path";
-
-dotenv.config();
+import SimplePeer from "simple-peer";
+import cors from "cors";
+import { v4 as uuidv4 } from "uuid";
 const app = express();
-app.use(express.json());
 
 app.use(
   cors({
@@ -18,56 +15,26 @@ app.use(
   })
 );
 
-// Multer for file uploads
-const storage = multer.memoryStorage();
-const upload = multer({
-  storage: storage,
-  limits: { fileSize: 1024 * 1024 * 150 }, // 150 MB limit
-});
-
-const httpServer = createServer(app);
+const httpServer = http.createServer(app);
 const io = new Server(httpServer, {
   cors: {
     origin: "*",
     methods: ["GET", "POST"],
-    allowedHeaders: "Content-Type, Recipient-Socket-Id , x-socket-id",
+    allowedHeaders: "Content-Type, Recipient-Socket-Id, x-socket-id",
   },
 });
 
 const users = {};
 
-io.on("connection", (socket) => {
-  socket.on("setNickname", (nickname) => {
-    users[socket.id] = nickname;
-    io.emit("updateUsers", Object.values(users));
-  });
+app.use(express.json());
 
-  socket.on("disconnect", () => {
-    delete users[socket.id];
-    io.emit("updateUsers", Object.keys(users));
-  });
-
-  socket.on("uploadFile", (fileData, recipientNickname) => {
-    const recipientSocketId = Object.keys(users).find(
-      (socketId) => users[socketId] === recipientNickname
-    );
-
-    if (recipientSocketId) {
-      io.to(recipientSocketId).emit("receiveFile", {
-        sender: { id: socket.id, nickname: users[socket.id] },
-        fileData,
-      });
-      console.log("File sent to", recipientNickname);
-    } else {
-      console.log("Recipient socket not found", recipientNickname);
-    }
-  });
-});
+// Multer for file uploads
+const storage = multer.memoryStorage();
+const upload = multer({ storage });
 
 app.post("/upload", upload.single("file"), (req, res) => {
   try {
-    console.log("Upload starting...");
-    const fileData = req.file.buffer.toString("base64");
+    const fileData = req.file.buffer;
     const recipientNickname = req.headers["recipient-socket-id"];
     const senderSocketId = req.headers["x-socket-id"];
 
@@ -75,33 +42,79 @@ app.post("/upload", upload.single("file"), (req, res) => {
       (socketId) => users[socketId] === recipientNickname
     );
 
-    console.log("Recipient socket id", recipientSocketId);
-    // if (recipientSocketId) {
-    //   io.to(recipientSocketId).emit("receiveFile", {
-    //     sender: { id: senderSocketId, nickname: users[senderSocketId] },
-    //     fileData,
-    //   });
-    //   res.status(200).send("File uploaded successfully");
-    // } else {
-    //   console.log("Recipient socket not found", recipientNickname);
-    //   res.status(404).send("Recipient socket not found");
-    // }
+    if (recipientSocketId) {
+      const fileId = uuidv4();
 
-    console.log("function completed");
+      // Notify sender and recipient to initiate P2P file transfer
+      io.to(senderSocketId).emit("initiateFileTransfer", {
+        fileId,
+        recipientSocketId,
+        fileData,
+      });
+
+      io.to(recipientSocketId).emit("initiateFileTransfer", {
+        fileId,
+        senderSocketId,
+        fileData,
+      });
+
+      console.log("File ready for transfer");
+      res.status(200).json({ fileId });
+    } else {
+      console.log("Recipient socket not found", recipientNickname);
+      res.status(404).send("Recipient not found");
+    }
   } catch (error) {
     console.error("Error handling file upload:", error.message);
     res.status(500).send("Internal Server Error");
   }
 });
 
-const PORT = process.env.PORT || 8080;
+// Handle P2P connections
+io.on("connection", (socket) => {
+  socket.on("setNickname", (nickname) => {
+    users[socket.id] = nickname;
+    io.emit("updateUsers", Object.values(users));
+    console.log("Socket connected");
+  });
 
+  socket.on("disconnect", () => {
+    delete users[socket.id];
+    io.emit("updateUsers", Object.keys(users));
+    console.log("Socket disconnected");
+  });
+
+  // Handle initiation of file transfer
+  socket.on("initiateFileTransfer", ({ fileId, targetSocketId, fileData }) => {
+    console.log("Initiating file transfer to targetSocketId:", targetSocketId);
+  });
+
+  // Handle response to offer signal
+  socket.on("answerSignal", ({ fileId, signal, senderSocketId, fileData }) => {
+    console.log("Answering offer signal from senderSocketId:", senderSocketId);
+    const peer = new SimplePeer({ initiator: false, trickle: false });
+
+    // Signal back to the sender
+    peer.signal(signal);
+
+    peer.on("data", (data) => {
+      console.log("Received data from peer:", data.toString());
+    });
+
+    peer.on("error", (error) => {
+      console.error("Peer error:", error.message);
+    });
+
+    peer.on("close", () => {
+      console.log("Peer connection closed");
+    });
+
+    // Send the file data to the peer
+    peer.send(fileData);
+  });
+});
+
+const PORT = process.env.PORT || 8080;
 httpServer.listen(PORT, () =>
-  console.log(
-    `Server running on ${
-      process.env.TYPE === "DEVELOPMENT"
-        ? "http://localhost:8080"
-        : process.env.HOSTEDURL
-    }`
-  )
+  console.log(`Server running on http://localhost:${PORT}`)
 );

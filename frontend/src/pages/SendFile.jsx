@@ -49,7 +49,12 @@ const SendFile = () => {
   }, [nickname, loading]);
 
   const handleFileUpload = async (event) => {
-    const file = event.target.files[0];
+    const fileInput = event.target;
+    if (!fileInput.files || fileInput.files.length === 0) {
+      return;
+    }
+
+    const file = fileInput.files[0];
     setSelectedFileName(file.name);
 
     // Ensure recipientSocketIds is correctly obtained from connectedDevices
@@ -158,7 +163,7 @@ const SendFile = () => {
                   <input
                     onChange={handleFileUpload}
                     type="file"
-                    className="absolute left-0 opacity-0"
+                    className="absolute opacity-0"
                   />
                 </>
               )}
